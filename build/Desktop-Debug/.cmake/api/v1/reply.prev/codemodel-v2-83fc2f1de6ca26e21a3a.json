@@ -1,0 +1,139 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-dce706859aa9096259c2.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				},
+				{
+					"build" : "third_party/liblcf",
+					"jsonFile" : "directory-third_party.liblcf-Debug-3d3289f49dd42f613449.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "third_party/liblcf",
+					"targetIndexes" : 
+					[
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "eidolist",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "liblcf",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "eidolist::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-eidolist-Debug-ad4c393756234a982404.json",
+					"name" : "eidolist",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "eidolist_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-eidolist_autogen-Debug-f26cfaad991cc67b7906.json",
+					"name" : "eidolist_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "eidolist_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-eidolist_autogen_timestamp_deps-Debug-496eb8d8048e8ad5e960.json",
+					"name" : "eidolist_autogen_timestamp_deps",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "lcf::@6c413829450355a7e2a1",
+					"jsonFile" : "target-lcf-Debug-d5c0b693dd9dd876084e.json",
+					"name" : "lcf",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "lcf_autogen::@6c413829450355a7e2a1",
+					"jsonFile" : "target-lcf_autogen-Debug-1078571bbfc23506aaf8.json",
+					"name" : "lcf_autogen",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "lcf_autogen_timestamp_deps::@6c413829450355a7e2a1",
+					"jsonFile" : "target-lcf_autogen_timestamp_deps-Debug-0c60ba39cafa0769bf65.json",
+					"name" : "lcf_autogen_timestamp_deps",
+					"projectIndex" : 1
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/maple/workdir/eidolist/build/Desktop-Debug",
+		"source" : "/home/maple/workdir/eidolist"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

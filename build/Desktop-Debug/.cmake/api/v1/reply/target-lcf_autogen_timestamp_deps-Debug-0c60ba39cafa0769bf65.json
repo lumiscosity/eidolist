@@ -1,0 +1,27 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"third_party/liblcf/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"id" : "lcf_autogen_timestamp_deps::@6c413829450355a7e2a1",
+	"isGeneratorProvided" : true,
+	"name" : "lcf_autogen_timestamp_deps",
+	"paths" : 
+	{
+		"build" : "third_party/liblcf",
+		"source" : "third_party/liblcf"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}
