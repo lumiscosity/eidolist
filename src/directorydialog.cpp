@@ -62,7 +62,7 @@ void DirectoryDialog::on_patchPushButton_clicked() {
     }
 }
 
-QString DirectoryDialog::orig() {
+QString DirectoryDialog::main() {
     return ui->mainLabel->text();
 }
 

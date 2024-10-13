@@ -15,29 +15,23 @@
  * along with Eidolist. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#include <qstring.h>
+
 #pragma once
 
-#include <QDialog>
+// diff: 0 for -, 1 for *, 2 for +
 
-namespace Ui {
-class DirectoryDialog;
-}
+struct Asset {
+    Asset(short diff, QString folder, QString name) : diff(diff), folder(folder), name(name) {}
+    short diff;
+    QString folder;
+    QString name;
+};
 
-class DirectoryDialog : public QDialog {
-    Q_OBJECT
-
-public:
-    explicit DirectoryDialog(QWidget *parent = nullptr);
-    ~DirectoryDialog();
-
-    QString main();
-    QString source();
-    QString patch();
-    void toggleOkButton();
-private slots:
-    void on_mainPushButton_clicked();
-    void on_sourcePushButton_clicked();
-    void on_patchPushButton_clicked();
-private:
-    Ui::DirectoryDialog *ui;
+struct DBAsset {
+    DBAsset(short diff, QString folder, int id) : diff(diff), folder(folder), id(id) {}
+    short diff;
+    QString folder;
+    int id;
 };

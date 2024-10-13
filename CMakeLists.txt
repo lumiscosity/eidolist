@@ -35,6 +35,7 @@ qt_add_executable(eidolist
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}
     eidolist.qrc
+    src/diffs.h
 )
 
 target_link_libraries(eidolist PRIVATE Qt6::Widgets)
