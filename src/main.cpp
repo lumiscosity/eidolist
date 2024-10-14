@@ -15,12 +15,14 @@
  * along with Eidolist. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "databaseholder.h"
 #include "diffs.h"
 #include "directorydialog.h"
 #include "filemerge_dialog.h"
 
 #include <QApplication>
 #include <QRegularExpression>
+#include <QMessageBox>
 #include <qfile.h>
 
 int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets) {
@@ -58,6 +60,8 @@ int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets) {
     }
 }
 
+QString paddedint(int number, int count) { return QString::number(number).rightJustified(count, char(48)); }
+
 void remove(QString source) {
     if (QFile::exists(source)) {
         QFile::remove(source);
@@ -77,8 +81,52 @@ void conflict(QString main, QString patch, Asset asset) {
         if (asset.diff == 0) {
             remove(main + path);
         } else {
-            merge(main + path, patch + path);
+            merge(patch + path, main + path);
         }
+    }
+}
+
+void dbconflict(QString main, QString patch, DBAsset dbasset) {
+    if (dbasset.folder == "Map") {
+        // map merging
+        if (dbasset.diff == 0) {
+            FileMergeDialog d;
+            d.populateLabels(main + QString("Map%1.lmu").arg(paddedint(dbasset.id, 4)), patch + QString("Map%1.lmu").arg(paddedint(dbasset.id, 4)));
+        } else {
+            // TODO: add actual map merging workflow
+            QMessageBox::warning(nullptr, "Warning", QString("Map %1 must be merged manually!").arg(dbasset.id));
+        }
+    } else if (dbasset.folder == "CE") {
+        // CE merging
+        // TODO: add actual CE merging workflow
+        QMessageBox::warning(nullptr, "Warning", QString("CE %1 must be merged manually!").arg(dbasset.id));
+    } else {
+        // all other merges
+        // some of these could use a custom merge workflow down the line, but i'm happy enough with these two for now
+        QMessageBox::warning(nullptr, "Warning", QString("Database item %1 with ID %2 must be merged manually!").arg(dbasset.folder).arg(dbasset.id));
+    }
+}
+
+void dbmerge(QString main, QString patch, DBAsset dbasset, DatabaseHolder &h) {
+    if (dbasset.folder == "Map") {
+        h.m_tree->maps[dbasset.id] = h.p_tree->maps[dbasset.id];
+        merge(patch + QString("Map%1.lmu").arg(paddedint(dbasset.id, 4)), main + QString("Map%1.lmu").arg(paddedint(dbasset.id, 4)));
+    } else if (dbasset.folder == "CE") {
+        h.m_db->commonevents[dbasset.id - 1] = h.p_db->commonevents[dbasset.id - 1];
+    } else if (dbasset.folder == "Switch") {
+        h.m_db->switches[dbasset.id - 1] = h.p_db->switches[dbasset.id - 1];
+    } else if (dbasset.folder == "Variable") {
+        h.m_db->variables[dbasset.id - 1] = h.p_db->variables[dbasset.id - 1];
+    } else if (dbasset.folder == "Actor") {
+        h.m_db->actors[dbasset.id - 1] = h.p_db->actors[dbasset.id - 1];
+    } else if (dbasset.folder == "Animation") {
+        h.m_db->animations[dbasset.id - 1] = h.p_db->animations[dbasset.id - 1];
+    } else if (dbasset.folder == "Item") {
+        h.m_db->items[dbasset.id - 1] = h.p_db->items[dbasset.id - 1];
+    } else if (dbasset.folder == "Terrain") {
+        h.m_db->terrains[dbasset.id - 1] = h.p_db->terrains[dbasset.id - 1];
+    } else if (dbasset.folder == "Tileset") {
+        h.m_db->chipsets[dbasset.id - 1] = h.p_db->chipsets[dbasset.id - 1];
     }
 }
 
@@ -95,6 +143,8 @@ int main(int argc, char *argv[])
 
         QString main = w.main();
         QString patch = w.patch();
+
+        DatabaseHolder h(main, patch);
 
         readlog(w.main(), main_assets, main_dbassets);
         readlog(w.patch(), patch_assets, patch_dbassets);
@@ -129,10 +179,57 @@ int main(int argc, char *argv[])
                     conflict(main, patch, i);
                 } else {
                     QString path = QString("/%1/%2").arg(i.folder).arg(i.name);
-                    merge(main + path, patch + path);
+                    merge(patch + path, main + path);
                 }
             }
         }
+        // make a backup of the database. eidolist is beta grade software!
+        merge(main + "RPG_RT.ldb", main + "RPG_RT.ldb.bak");
+        // run merges for database items and maps
+        // they're grouped together simply because it's convenient
+        for (DBAsset i : patch_dbassets) {
+            DBAsset *a = nullptr;
+            for (DBAsset j : main_dbassets) {
+                if (j.folder == i.folder && j.id == i.id) {
+                    *a = j;
+                    break;
+                }
+            }
+            if (a) {
+                switch (a->diff) {
+                    case 0: {
+                        // if the item has been removed this cycle, ignore incoming removals and ask about additions/modifications
+                        if (i.diff != 0) {
+                            dbconflict(main, patch, i);
+                        }
+                    }
+                    default: {
+                        // if the item has been modified or added this cycle, always ask
+                        dbconflict(main, patch, i);
+                    }
+                }
+            } else {
+                // item not modified this cycle; automerge
+                // (except for removals, always ask about those for safety reasons)
+                if (i.diff == 0) {
+                    dbconflict(main, patch, i);
+                } else {
+                    dbmerge(main, patch, i, h);
+                }
+            }
+        }
+        // save modified map tree and database
+        lcf::LMT_Reader::Save(
+            (main + QString("RPG_RT.lmt")).toStdString(),
+            *h.m_tree,
+            lcf::EngineVersion::e2k3,
+            "UTF-8",
+            lcf::SaveOpt::eNone);
+        lcf::LDB_Reader::Save(
+            (main + QString("RPG_RT.ldb")).toStdString(),
+            *h.m_db,
+            "UTF-8",
+            lcf::SaveOpt::eNone);
     }
 
     return a.exec();

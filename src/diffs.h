@@ -15,7 +15,6 @@
  * along with Eidolist. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include <qstring.h>
 
 #pragma once
