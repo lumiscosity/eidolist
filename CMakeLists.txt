@@ -36,6 +36,8 @@ qt_add_executable(eidolist
     ${PROJECT_SOURCES}
     eidolist.qrc
     src/diffs.h
+    src/filemerge_dialog.h src/filemerge_dialog.cpp src/filemerge_dialog.ui
+
 )
 
 target_link_libraries(eidolist PRIVATE Qt6::Widgets)
