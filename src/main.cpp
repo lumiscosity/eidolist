@@ -24,8 +24,14 @@
 #include <QRegularExpression>
 #include <QMessageBox>
 #include <qfile.h>
+#include <QDirIterator>
 
-int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets) {
+QString paddedint(int number, int count) { return QString::number(number).rightJustified(count, char(48)); }
+
+int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const bool validate = false) {
+    // 0 - success
+    // 1 - file load failure
+    // 2 - changelog/file list mismatch not ignored
     QRegularExpression ex("^[^ ]* [^ ]*\\[.*$");
     QRegularExpression fileex("^(?:\\S+\\s+){2}(.*?)(?:\\s*\\(|$)");
 
@@ -43,10 +49,32 @@ int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets) {
                 if (QStringList{"+", "*"}.contains(i.first(1))) {
                     if (ex.match(i).hasMatch() && i.mid(2, 3) == "MAP" && i.contains("]")) {
                         // map (stored in db items for convenience)
-                        dbassets.push_back(DBAsset(diffs[i.first(1)], "Map", i.split("[")[1].split("]")[0].toInt()));
+                        DBAsset file(diffs[i.first(1)], "Map", i.split("[")[1].split("]")[0].toInt());
+                        if (validate && !QFile::exists(path + QString("/%1/Map%2.lmu").arg(file.folder).arg(paddedint(file.id, 4)))) {
+                            if (QMessageBox::warning(
+                                    nullptr,
+                                    "Warning",
+                                    QString("Map[%1] was mentioned in the changelog, but not included in the patch!").arg(paddedint(file.id, 4)),
+                                    QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
+                                    )) {
+                                return 2;
+                            }
+                        }
+                        dbassets.push_back(file);
                     } else if (!ex.match(i).hasMatch() && i.split(" ").size() >= 2) {
                         // file
-                        assets.push_back(Asset(diffs[i.first(1)], i.split(" ")[1], fileex.match(i).captured(1)));
+                        Asset file(diffs[i.first(1)], i.split(" ")[1], fileex.match(i).captured(1));
+                        if (validate && !QFile::exists(path + QString("/%1/%2").arg(file.folder).arg(file.name))) {
+                            if (QMessageBox::warning(
+                                nullptr,
+                                "Warning",
+                                QString("%1/%2 was mentioned in the changelog, but not included in the patch!").arg(file.folder).arg(file.name),
+                                QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
+                                    )) {
+                                return 2;
+                            }
+                        }
+                        assets.push_back(file);
                     } else {
                         // database item
                         dbassets.push_back(DBAsset(diffs[i.first(1)], i.split(" ")[1].split("[")[0], i.split("[")[1].split("]")[0].toInt()));
@@ -54,13 +82,47 @@ int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets) {
                 }
             }
         }
+        // ensure that all files in the patch have been included in the changelog
+        if (validate) {
+            QDirIterator iter(path, QDirIterator::Subdirectories);
+            while (iter.hasNext()) {
+                iter.next();
+                QString name = iter.fileName();
+                QString folder = iter.filePath().first(iter.filePath().length() - iter.fileName().length() - 1);
+                bool found = false;
+                for (Asset i : assets) {
+                    if (i.diff && folder == i.folder && name == i.name) {
+                        found = true;
+                    }
+                }
+                for (DBAsset i : dbassets) {
+                    if (i.diff && i.folder == "Map" && name.mid(3, 4).toInt() == i.id) {
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    if (QMessageBox::warning(
+                            nullptr,
+                            "Warning",
+                            QString("%1/%2 was included in the patch, but not in the changelog!").arg(folder).arg(name),
+                            QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
+                            )) {
+                        return 2;
+                    }
+                }
+            }
+        }
         return 0;
     } else {
+        QMessageBox::critical(
+            nullptr,
+            "Error",
+            QString("The changelog in copy %1 could not be located!").arg(path),
+            QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
+        );
         return 1;
     }
 }
-
-QString paddedint(int number, int count) { return QString::number(number).rightJustified(count, char(48)); }
 
 void remove(QString source) {
     if (QFile::exists(source)) {
@@ -113,9 +175,9 @@ void dbmerge(QString main, QString patch, DBAsset dbasset, DatabaseHolder &h) {
         merge(patch + QString("Map%1.lmu").arg(paddedint(dbasset.id, 4)), main + QString("Map%1.lmu").arg(paddedint(dbasset.id, 4)));
     } else if (dbasset.folder == "CE") {
         h.m_db->commonevents[dbasset.id - 1] = h.p_db->commonevents[dbasset.id - 1];
-    } else if (dbasset.folder == "Switch") {
+    } else if (dbasset.folder == "Switch" || dbasset.folder == "S") {
         h.m_db->switches[dbasset.id - 1] = h.p_db->switches[dbasset.id - 1];
-    } else if (dbasset.folder == "Variable") {
+    } else if (dbasset.folder == "Variable" || dbasset.folder == "V") {
         h.m_db->variables[dbasset.id - 1] = h.p_db->variables[dbasset.id - 1];
     } else if (dbasset.folder == "Actor") {
         h.m_db->actors[dbasset.id - 1] = h.p_db->actors[dbasset.id - 1];
@@ -144,10 +206,14 @@ int main(int argc, char *argv[])
         QString main = w.main();
         QString patch = w.patch();
 
-        DatabaseHolder h(main, patch);
+        DatabaseHolder h(main, w.source(), patch);
 
-        readlog(w.main(), main_assets, main_dbassets);
-        readlog(w.patch(), patch_assets, patch_dbassets);
+        if (readlog(main, main_assets, main_dbassets)) {
+            return 1;
+        }
+        if (readlog(patch, patch_assets, patch_dbassets)) {
+            return 1;
+        }
         // run merges for files
         // assets which are being added, removed or modified for the first time this build cycle (not in main_assets) get automerged
         // otherwise, a conflict is raised

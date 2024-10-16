@@ -40,7 +40,7 @@ void DirectoryDialog::toggleOkButton() {
 
 void DirectoryDialog::on_mainPushButton_clicked() {
     QString path = QFileDialog::getExistingDirectory(this, "Select the main copy directory");
-    if (!path.isEmpty()){
+    if (!path.isEmpty()) {
         ui->mainLabel->setText(path);
         toggleOkButton();
     }
@@ -48,7 +48,7 @@ void DirectoryDialog::on_mainPushButton_clicked() {
 
 void DirectoryDialog::on_sourcePushButton_clicked() {
     QString path = QFileDialog::getExistingDirectory(this, "Select the source copy directory");
-    if (!path.isEmpty()){
+    if (!path.isEmpty()) {
         ui->sourceLabel->setText(path);
         toggleOkButton();
     }
@@ -56,7 +56,7 @@ void DirectoryDialog::on_sourcePushButton_clicked() {
 
 void DirectoryDialog::on_patchPushButton_clicked() {
     QString path = QFileDialog::getExistingDirectory(this, "Select the patch copy directory");
-    if (!path.isEmpty()){
+    if (!path.isEmpty()) {
         ui->patchLabel->setText(path);
         toggleOkButton();
     }
