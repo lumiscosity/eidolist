@@ -15,6 +15,7 @@
  * along with Eidolist. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ce_diff.h"
 #include "databaseholder.h"
 #include "diffs.h"
 #include "directorydialog.h"
@@ -40,7 +41,7 @@ int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const 
     diffs["*"] = 1;
     diffs["+"] = 2;
 
-    QFile f(path + "changelog.txt");
+    QFile f(path + "/changelog.txt");
     if (f.open(QFile::ReadOnly | QFile::Text)){
         QTextStream in(&f);
         QString i;
@@ -148,20 +149,19 @@ void conflict(QString main, QString patch, Asset asset) {
     }
 }
 
-void dbconflict(QString main, QString patch, DBAsset dbasset) {
+void dbconflict(QString main, QString patch, DBAsset dbasset, DatabaseHolder &holder) {
     if (dbasset.folder == "Map") {
         // map merging
         if (dbasset.diff == 0) {
             FileMergeDialog d;
-            d.populateLabels(main + QString("Map%1.lmu").arg(paddedint(dbasset.id, 4)), patch + QString("Map%1.lmu").arg(paddedint(dbasset.id, 4)));
+            d.populateLabels(main + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)), patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)));
         } else {
             // TODO: add actual map merging workflow
             QMessageBox::warning(nullptr, "Warning", QString("Map %1 must be merged manually!").arg(dbasset.id));
         }
     } else if (dbasset.folder == "CE") {
         // CE merging
-        // TODO: add actual CE merging workflow
-        QMessageBox::warning(nullptr, "Warning", QString("CE %1 must be merged manually!").arg(dbasset.id));
+        ce_diff(holder, dbasset);
     } else {
         // all other merges
         // some of these could use a custom merge workflow down the line, but i'm happy enough with these two for now
@@ -172,7 +172,7 @@ void dbconflict(QString main, QString patch, DBAsset dbasset) {
 void dbmerge(QString main, QString patch, DBAsset dbasset, DatabaseHolder &h) {
     if (dbasset.folder == "Map") {
         h.m_tree->maps[dbasset.id] = h.p_tree->maps[dbasset.id];
-        merge(patch + QString("Map%1.lmu").arg(paddedint(dbasset.id, 4)), main + QString("Map%1.lmu").arg(paddedint(dbasset.id, 4)));
+        merge(patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)), main + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)));
     } else if (dbasset.folder == "CE") {
         h.m_db->commonevents[dbasset.id - 1] = h.p_db->commonevents[dbasset.id - 1];
     } else if (dbasset.folder == "Switch" || dbasset.folder == "S") {
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
             Asset *a = nullptr;
             for (Asset j : main_assets) {
                 if (j.folder == i.folder && j.name == i.name) {
-                    *a = j;
+                    a = &j;
                     break;
                 }
             }
@@ -250,14 +250,14 @@ int main(int argc, char *argv[])
             }
         }
         // make a backup of the database. eidolist is beta grade software!
-        merge(main + "RPG_RT.ldb", main + "RPG_RT.ldb.bak");
+        merge(main + "/RPG_RT.ldb", main + "/RPG_RT.ldb.bak");
         // run merges for database items and maps
         // they're grouped together simply because it's convenient
         for (DBAsset i : patch_dbassets) {
             DBAsset *a = nullptr;
             for (DBAsset j : main_dbassets) {
                 if (j.folder == i.folder && j.id == i.id) {
-                    *a = j;
+                    a = &j;
                     break;
                 }
             }
@@ -266,19 +266,19 @@ int main(int argc, char *argv[])
                     case 0: {
                         // if the item has been removed this cycle, ignore incoming removals and ask about additions/modifications
                         if (i.diff != 0) {
-                            dbconflict(main, patch, i);
+                            dbconflict(main, patch, i, h);
                         }
                     }
                     default: {
                         // if the item has been modified or added this cycle, always ask
-                        dbconflict(main, patch, i);
+                        dbconflict(main, patch, i, h);
                     }
                 }
             } else {
                 // item not modified this cycle; automerge
                 // (except for removals, always ask about those for safety reasons)
                 if (i.diff == 0) {
-                    dbconflict(main, patch, i);
+                    dbconflict(main, patch, i, h);
                 } else {
                     dbmerge(main, patch, i, h);
                 }
@@ -286,13 +286,13 @@ int main(int argc, char *argv[])
         }
         // save modified map tree and database
         lcf::LMT_Reader::Save(
-            (main + QString("RPG_RT.lmt")).toStdString(),
+            (main + QString("/RPG_RT.lmt")).toStdString(),
             *h.m_tree,
             lcf::EngineVersion::e2k3,
             "UTF-8",
             lcf::SaveOpt::eNone);
         lcf::LDB_Reader::Save(
-            (main + QString("RPG_RT.ldb")).toStdString(),
+            (main + QString("/RPG_RT.ldb")).toStdString(),
             *h.m_db,
             "UTF-8",
             lcf::SaveOpt::eNone);

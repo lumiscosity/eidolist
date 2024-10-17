@@ -38,6 +38,7 @@ qt_add_executable(eidolist
     src/diffs.h
     src/filemerge_dialog.h src/filemerge_dialog.cpp src/filemerge_dialog.ui
     src/databaseholder.h src/databaseholder.cpp
+    src/ce_diff.h src/ce_diff.cpp
 
 )
 

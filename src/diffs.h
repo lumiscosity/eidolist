@@ -17,6 +17,8 @@
 
 #include <qstring.h>
 
+#include <lcf/rpg/eventcommand.h>
+
 #pragma once
 
 // diff: 0 for -, 1 for *, 2 for +
