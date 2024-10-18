@@ -33,7 +33,13 @@ public:
     ~FileMergeDialog();
 
     void populateLabels(QString main, QString patch);
+private slots:
+    void on_mainCopyButton_clicked();
+    void on_patchButton_clicked();
+
 private:
     void populateLabel(QLabel *label, QString path);
     Ui::FileMergeDialog *ui;
+    QString m_main;
+    QString m_patch;
 };

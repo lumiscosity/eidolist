@@ -31,17 +31,29 @@ FileMergeDialog::~FileMergeDialog() {
 void FileMergeDialog::populateLabel(QLabel *label, QString path) {
     if (QFile::exists(path)) {
         if (path.endsWith(".png") || path.endsWith(".bmp")) {
-            ui->mainLabel->setPixmap(QPixmap(path));
+            label->setPixmap(QPixmap(path));
         } else {
             // TODO: add sound handling
-            ui->mainLabel->setText(path);
+            label->setText(path);
         }
     } else {
-        ui->mainLabel->setText("(not present)");
+        label->setText("(not present)");
     }
 }
 
 void FileMergeDialog::populateLabels(QString main, QString patch) {
     populateLabel(ui->mainLabel, main);
     populateLabel(ui->patchLabel, patch);
+    m_main = main;
+    m_patch = patch;
 }
+
+void FileMergeDialog::on_mainCopyButton_clicked() {
+    this->close();
+}
+
+void FileMergeDialog::on_patchButton_clicked() {
+    QFile::copy(m_patch, m_main);
+    this->close();
+}
+

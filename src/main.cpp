@@ -208,7 +208,13 @@ int main(int argc, char *argv[])
 
         DatabaseHolder h(main, w.source(), patch);
 
-        if (readlog(main, main_assets, main_dbassets)) {
+        // if there is no changelog for the main copy yet, create one
+        if (!QFile::exists(main + "/changelog.txt")) {
+            QFile f(main + "/changelog.txt");
+            f.open(QFile::OpenModeFlag::WriteOnly);
+            f.write("");
+            f.close();
+        } else if (readlog(main, main_assets, main_dbassets)) {
             return 1;
         }
         if (readlog(patch, patch_assets, patch_dbassets)) {
@@ -225,7 +231,7 @@ int main(int argc, char *argv[])
                     break;
                 }
             }
-            if (a) {
+            if (a != nullptr) {
                 switch (a->diff) {
                     case 0: {
                         // if the item has been removed this cycle, ignore incoming removals and ask about additions/modifications
@@ -261,7 +267,7 @@ int main(int argc, char *argv[])
                     break;
                 }
             }
-            if (a) {
+            if (a != nullptr) {
                 switch (a->diff) {
                     case 0: {
                         // if the item has been removed this cycle, ignore incoming removals and ask about additions/modifications
@@ -296,7 +302,9 @@ int main(int argc, char *argv[])
             *h.m_db,
             "UTF-8",
             lcf::SaveOpt::eNone);
+
+        QMessageBox::information(nullptr, "Eidolist", "Merge complete! Don't forget to double-check if the patch was applied correctly and playtest the added content.");
     }
 
-    return a.exec();
+    return 0;
 }
