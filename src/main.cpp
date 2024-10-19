@@ -19,15 +19,14 @@
 #include "databaseholder.h"
 #include "diffs.h"
 #include "directorydialog.h"
-#include "filemerge_dialog.h"
+#include "dialogs/filemerge_dialog.h"
+#include "map_diff.h"
 
 #include <QApplication>
 #include <QRegularExpression>
 #include <QMessageBox>
 #include <qfile.h>
 #include <QDirIterator>
-
-QString paddedint(int number, int count) { return QString::number(number).rightJustified(count, char(48)); }
 
 int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const bool validate = false) {
     // 0 - success
@@ -149,15 +148,14 @@ void conflict(QString main, QString patch, Asset asset) {
     }
 }
 
-void dbconflict(QString main, QString patch, DBAsset dbasset, DatabaseHolder &holder) {
+void dbconflict(QString main, QString source, QString patch, DBAsset dbasset, DatabaseHolder &holder) {
     if (dbasset.folder == "Map") {
         // map merging
         if (dbasset.diff == 0) {
             FileMergeDialog d;
             d.populateLabels(main + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)), patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)));
         } else {
-            // TODO: add actual map merging workflow
-            QMessageBox::warning(nullptr, "Warning", QString("Map %1 must be merged manually!").arg(dbasset.id));
+            map_diff(holder, dbasset, main, source, patch);
         }
     } else if (dbasset.folder == "CE") {
         // CE merging
@@ -272,19 +270,19 @@ int main(int argc, char *argv[])
                     case 0: {
                         // if the item has been removed this cycle, ignore incoming removals and ask about additions/modifications
                         if (i.diff != 0) {
-                            dbconflict(main, patch, i, h);
+                            dbconflict(main, w.source(), patch, i, h);
                         }
                     }
                     default: {
                         // if the item has been modified or added this cycle, always ask
-                        dbconflict(main, patch, i, h);
+                        dbconflict(main, w.source(), patch, i, h);
                     }
                 }
             } else {
                 // item not modified this cycle; automerge
                 // (except for removals, always ask about those for safety reasons)
                 if (i.diff == 0) {
-                    dbconflict(main, patch, i, h);
+                    dbconflict(main, w.source(), patch, i, h);
                 } else {
                     dbmerge(main, patch, i, h);
                 }

@@ -36,9 +36,12 @@ qt_add_executable(eidolist
     ${PROJECT_SOURCES}
     eidolist.qrc
     src/diffs.h
-    src/filemerge_dialog.h src/filemerge_dialog.cpp src/filemerge_dialog.ui
+    src/dialogs/filemerge_dialog.h src/dialogs/filemerge_dialog.cpp src/dialogs/filemerge_dialog.ui
+    src/dialogs/mapinfodiff_dialog.h src/dialogs/mapinfodiff_dialog.cpp src/dialogs/mapinfodiff_dialog.ui
     src/databaseholder.h src/databaseholder.cpp
     src/ce_diff.h src/ce_diff.cpp
+    src/map_diff.h
+    src/map_diff.cpp
 
 )
 

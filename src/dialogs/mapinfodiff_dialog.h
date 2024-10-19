@@ -15,26 +15,32 @@
  * along with Eidolist. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <qstring.h>
-
-#include <lcf/rpg/eventcommand.h>
-
 #pragma once
 
-// diff: 0 for -, 1 for *, 2 for +
+#include <QDialog>
+#include <qlabel.h>
 
-struct Asset {
-    Asset(short diff, QString folder, QString name) : diff(diff), folder(folder), name(name) {}
-    short diff;
-    QString folder;
-    QString name;
+#include <lcf/rpg/mapinfo.h>
+
+namespace Ui {
+class MapInfoDiffDialog;
+}
+
+class MapInfoDiffDialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+    explicit MapInfoDiffDialog(QWidget *parent = nullptr);
+    ~MapInfoDiffDialog();
+
+    void populateLabels(lcf::rpg::MapInfo main, lcf::rpg::MapInfo patch);
+private slots:
+    void on_mainCopyButton_clicked();
+    void on_patchButton_clicked();
+private:
+    void populateLabel(QLabel *label, lcf::rpg::MapInfo info);
+    Ui::MapInfoDiffDialog *ui;
+    QString m_main;
+    QString m_patch;
 };
-
-struct DBAsset {
-    DBAsset(short diff, QString folder, int id) : diff(diff), folder(folder), id(id) {}
-    short diff;
-    QString folder;
-    int id;
-};
-
-inline QString paddedint(int number, int count) { return QString::number(number).rightJustified(count, char(48)); }
