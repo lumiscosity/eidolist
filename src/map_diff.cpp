@@ -125,6 +125,7 @@ int map_diff(DatabaseHolder &d, DBAsset asset, QString main, QString source, QSt
     }
 
     // merge events
+    // TODO: add a warning if events overlap
 
     // get every changed event in the original map
     QList<lcf::rpg::Event> p_events;
@@ -138,6 +139,15 @@ int map_diff(DatabaseHolder &d, DBAsset asset, QString main, QString source, QSt
         i.ID = first_free_id(m_map);
         m_map->events.push_back(i);
     }
+
+    // save the map
+    lcf::LMU_Reader::Save(
+        (main + QString("Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(),
+        *m_map,
+        lcf::GetEngineVersion(*d.m_db),
+        "UTF-8",
+        lcf::SaveOpt::eNone
+    );
 
     return 0;
 }
