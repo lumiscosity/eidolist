@@ -42,6 +42,7 @@ qt_add_executable(eidolist
     src/ce_diff.h src/ce_diff.cpp
     src/map_diff.h
     src/map_diff.cpp
+    src/write_changelog.h src/write_changelog.cpp
 
 )
 

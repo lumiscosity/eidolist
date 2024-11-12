@@ -20,13 +20,18 @@
 #include "diffs.h"
 #include "directorydialog.h"
 #include "dialogs/filemerge_dialog.h"
+#include "lcf/lmu/reader.h"
 #include "map_diff.h"
+#include "write_changelog.h"
 
 #include <QApplication>
 #include <QRegularExpression>
 #include <QMessageBox>
 #include <qfile.h>
 #include <QDirIterator>
+#include <qsettings.h>
+
+#include <lcf/rpg/map.h>
 
 int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const bool validate = false) {
     // 0 - success
@@ -117,7 +122,7 @@ int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const 
         QMessageBox::critical(
             nullptr,
             "Error",
-            QString("The changelog in copy %1 could not be located!").arg(path),
+            QString("The changelog in copy %1 could not be located! Make sure that it is placed in the copy folder as changelog.txt.").arg(path),
             QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
         );
         return 1;
@@ -167,8 +172,25 @@ void dbconflict(QString main, QString source, QString patch, DBAsset dbasset, Da
     }
 }
 
-void dbmerge(QString main, QString patch, DBAsset dbasset, DatabaseHolder &h) {
+void dbmerge(QString main, QString source, QString patch, DBAsset dbasset, DatabaseHolder &h) {
     if (dbasset.folder == "Map") {
+        // populate the tilediff
+        // for more info about this check the map_diff.cpp file
+        std::unique_ptr<lcf::rpg::Map> s_map = lcf::LMU_Reader::Load((source + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4))).toStdString(), "UTF-8");
+        std::unique_ptr<lcf::rpg::Map> p_map = lcf::LMU_Reader::Load((patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4))).toStdString(), "UTF-8");
+        QSettings tilediff(main + "/eidolist_tilediff");
+        QList<QSet<int>> p_changed = QList<QSet<int>>{QSet<int>(), QSet<int>()};
+        for (int i = 0; i > p_map->lower_layer.size(); i++) {
+            if (p_map->lower_layer[i] !=  s_map->lower_layer[i]) {
+                p_changed[0].insert(i);
+            }
+        }
+        for (int i = 0; i > p_map->upper_layer.size(); i++) {
+            if (p_map->upper_layer[i] !=  s_map->upper_layer[i]) {
+                p_changed[1].insert(i);
+            }
+        }
+        tilediff.setValue(QString::number(dbasset.id), QVariant::fromValue(p_changed));
         h.m_tree->maps[dbasset.id] = h.p_tree->maps[dbasset.id];
         merge(patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)), main + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)));
     } else if (dbasset.folder == "CE") {
@@ -181,17 +203,30 @@ void dbmerge(QString main, QString patch, DBAsset dbasset, DatabaseHolder &h) {
         h.m_db->actors[dbasset.id - 1] = h.p_db->actors[dbasset.id - 1];
     } else if (dbasset.folder == "Animation") {
         h.m_db->animations[dbasset.id - 1] = h.p_db->animations[dbasset.id - 1];
+    } else if (dbasset.folder == "BattlerAnim") {
+        h.m_db->battleranimations[dbasset.id - 1] = h.p_db->battleranimations[dbasset.id - 1];
+    } else if (dbasset.folder == "Class") {
+        h.m_db->classes[dbasset.id - 1] = h.p_db->classes[dbasset.id - 1];
+    } else if (dbasset.folder == "Element") {
+        h.m_db->attributes[dbasset.id - 1] = h.p_db->attributes[dbasset.id - 1];
+    } else if (dbasset.folder == "Enemy") {
+        h.m_db->enemies[dbasset.id - 1] = h.p_db->enemies[dbasset.id - 1];
     } else if (dbasset.folder == "Item") {
         h.m_db->items[dbasset.id - 1] = h.p_db->items[dbasset.id - 1];
+    } else if (dbasset.folder == "Skill") {
+        h.m_db->skills[dbasset.id - 1] = h.p_db->skills[dbasset.id - 1];
+    } else if (dbasset.folder == "State") {
+        h.m_db->states[dbasset.id - 1] = h.p_db->states[dbasset.id - 1];
     } else if (dbasset.folder == "Terrain") {
         h.m_db->terrains[dbasset.id - 1] = h.p_db->terrains[dbasset.id - 1];
     } else if (dbasset.folder == "Tileset") {
         h.m_db->chipsets[dbasset.id - 1] = h.p_db->chipsets[dbasset.id - 1];
+    } else if (dbasset.folder == "Troop") {
+        h.m_db->troops[dbasset.id - 1] = h.p_db->troops[dbasset.id - 1];
     }
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
     DirectoryDialog w;
     if (w.exec()) {
@@ -203,8 +238,9 @@ int main(int argc, char *argv[])
 
         QString main = w.main();
         QString patch = w.patch();
+        QString source = w.source();
 
-        DatabaseHolder h(main, w.source(), patch);
+        DatabaseHolder h(main, source, patch);
 
         // if there is no changelog for the main copy yet, create one
         if (!QFile::exists(main + "/changelog.txt")) {
@@ -270,21 +306,21 @@ int main(int argc, char *argv[])
                     case 0: {
                         // if the item has been removed this cycle, ignore incoming removals and ask about additions/modifications
                         if (i.diff != 0) {
-                            dbconflict(main, w.source(), patch, i, h);
+                            dbconflict(main, source, patch, i, h);
                         }
                     }
                     default: {
                         // if the item has been modified or added this cycle, always ask
-                        dbconflict(main, w.source(), patch, i, h);
+                        dbconflict(main, source, patch, i, h);
                     }
                 }
             } else {
                 // item not modified this cycle; automerge
                 // (except for removals, always ask about those for safety reasons)
                 if (i.diff == 0) {
-                    dbconflict(main, w.source(), patch, i, h);
+                    dbconflict(main, source, patch, i, h);
                 } else {
-                    dbmerge(main, patch, i, h);
+                    dbmerge(main, source, patch, i, h);
                 }
             }
         }
@@ -300,6 +336,9 @@ int main(int argc, char *argv[])
             *h.m_db,
             "UTF-8",
             lcf::SaveOpt::eNone);
+
+        // add the patch changelog to the main changelog
+        write_changelog(main, patch);
 
         QMessageBox::information(nullptr, "Eidolist", "Merge complete! Don't forget to double-check if the patch was applied correctly and playtest the added content.");
     }
