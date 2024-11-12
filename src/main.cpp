@@ -180,6 +180,7 @@ void dbmerge(QString main, QString source, QString patch, DBAsset dbasset, Datab
         std::unique_ptr<lcf::rpg::Map> p_map = lcf::LMU_Reader::Load((patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4))).toStdString(), "UTF-8");
         QSettings tilediff(main + "/eidolist_tilediff");
         QList<QSet<int>> p_changed = QList<QSet<int>>{QSet<int>(), QSet<int>()};
+        // generate a list of changed tiles in the patch
         for (int i = 0; i > p_map->lower_layer.size(); i++) {
             if (p_map->lower_layer[i] !=  s_map->lower_layer[i]) {
                 p_changed[0].insert(i);
@@ -191,6 +192,7 @@ void dbmerge(QString main, QString source, QString patch, DBAsset dbasset, Datab
             }
         }
         tilediff.setValue(QString::number(dbasset.id), QVariant::fromValue(p_changed));
+        // merge the map
         h.m_tree->maps[dbasset.id] = h.p_tree->maps[dbasset.id];
         merge(patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)), main + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)));
     } else if (dbasset.folder == "CE") {
