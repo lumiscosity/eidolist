@@ -74,4 +74,12 @@ void write_changelog(QString main, QString patch) {
         QMessageBox::warning(nullptr, "Warning", "The patch changelog cound not be opened!");
         return;
     }
+
+    // write the merged changelog
+    if (f_main.open(QFile::WriteOnly | QFile::Text)) {
+        f_main.write(QByteArray::fromStdString(main_log.join("\n").toStdString()));
+        f_main.close();
+    } else {
+        QMessageBox::warning(nullptr, "Warning", "The main changelog cound not be opened!");
+    }
 }
