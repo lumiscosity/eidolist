@@ -43,6 +43,9 @@ qt_add_executable(eidolist
     src/map_diff.h
     src/map_diff.cpp
     src/write_changelog.h src/write_changelog.cpp
+    src/changelog_parse.cpp
+    src/changelog_parse.h
+    src/merger_base.h
 
 )
 
