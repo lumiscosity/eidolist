@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
             }
         }
         // make a backup of the database. eidolist is beta grade software!
-        merge(main + "/RPG_RT.ldb", main + "/RPG_RT.ldb.bak");
+        QFile::copy(main + "/RPG_RT.ldb", main + "/RPG_RT.ldb.bak");
         // run merges for database items and maps
         // they're grouped together simply because it's convenient
         for (DBAsset i : patch_dbassets) {
@@ -130,22 +130,28 @@ int main(int argc, char *argv[]) {
                 if (i.diff == 0) {
                     dbconflict(main, source, patch, i, h);
                 } else {
-                    dbmerge(main, source, patch, i, h);
+                    if (dbmerge(main, source, patch, i, h) == 2) {
+                        return 1;
+                    }
                 }
             }
         }
         // save modified map tree and database
-        lcf::LMT_Reader::Save(
-            (main + QString("/RPG_RT.lmt")).toStdString(),
-            *h.m_tree,
-            lcf::EngineVersion::e2k3,
-            "UTF-8",
-            lcf::SaveOpt::eNone);
-        lcf::LDB_Reader::Save(
-            (main + QString("/RPG_RT.ldb")).toStdString(),
-            *h.m_db,
-            "UTF-8",
-            lcf::SaveOpt::eNone);
+        if (h.m_tree != nullptr) {
+            lcf::LMT_Reader::Save(
+                (main + QString("/RPG_RT.lmt")).toStdString(),
+                *h.m_tree,
+                lcf::EngineVersion::e2k3,
+                "UTF-8",
+                lcf::SaveOpt::eNone);
+        }
+        if (h.m_db != nullptr) {
+            lcf::LDB_Reader::Save(
+                (main + QString("/RPG_RT.ldb")).toStdString(),
+                *h.m_db,
+                "UTF-8",
+                lcf::SaveOpt::eNone);
+        }
 
         // add the patch changelog to the main changelog
         write_changelog(main, patch);

@@ -34,24 +34,26 @@ int map_diff(DatabaseHolder &d, DBAsset asset, QString main, QString source, QSt
     // 2: major error
 
     // check the map metadata
-    bool oob_map_main = d.m_tree->maps.size() < asset.id;
-    bool oob_map_patch = d.p_tree->maps.size() < asset.id;
-    if (oob_map_main) {
-        // TODO: add dummy maps to the main copy if necessary
-        QMessageBox::critical(nullptr, "Error", QString("Not enough map slots in the main copy to merge Map[%1]!").arg(paddedint(asset.id, 4)));
-        return 2;
-    }
-    if (oob_map_patch) {
-        QMessageBox::critical(
-            nullptr,
-            "Error",
-            QString("Attempted to merge Map[%1], which doesn't exist in the patch!").arg(paddedint(asset.id, 4)));
-        return 2;
-    } else if (d.p_tree->maps[asset.id] != d.m_tree->maps[asset.id]) {
-        MapInfoDiffDialog dialog;
-        dialog.populateLabels(d.p_tree->maps[asset.id], d.m_tree->maps[asset.id]);
-        if (dialog.exec()) {
-            d.m_tree->maps[asset.id] = d.p_tree->maps[asset.id];
+    if (d.p_tree != nullptr) {
+        bool oob_map_main = d.m_tree->maps.size() < asset.id;
+        bool oob_map_patch = d.p_tree->maps.size() < asset.id;
+        if (oob_map_main) {
+            // TODO: add dummy maps to the main copy if necessary
+            QMessageBox::critical(nullptr, "Error", QString("Not enough map slots in the main copy to merge Map[%1]!").arg(paddedint(asset.id, 4)));
+            return 2;
+        }
+        if (oob_map_patch) {
+            QMessageBox::critical(
+                nullptr,
+                "Error",
+                QString("Attempted to merge Map[%1], which doesn't exist in the patch!").arg(paddedint(asset.id, 4)));
+            return 2;
+        } else if (d.p_tree->maps[asset.id] != d.m_tree->maps[asset.id]) {
+            MapInfoDiffDialog dialog;
+            dialog.populateLabels(d.p_tree->maps[asset.id], d.m_tree->maps[asset.id]);
+            if (dialog.exec()) {
+                d.m_tree->maps[asset.id] = d.p_tree->maps[asset.id];
+            }
         }
     }
 

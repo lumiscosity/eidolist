@@ -26,7 +26,7 @@ void remove(QString source) {
 }
 
 void merge(QString source, QString dest) {
-    remove(source);
+    remove(dest);
     QFile::copy(source, dest);
 }
 
@@ -62,12 +62,20 @@ void dbconflict(QString main, QString source, QString patch, DBAsset dbasset, Da
     }
 }
 
-void dbmerge(QString main, QString source, QString patch, DBAsset dbasset, DatabaseHolder &h) {
+int dbmerge(QString main, QString source, QString patch, DBAsset dbasset, DatabaseHolder &h) {
+    if (dbasset.folder != "Map" && h.p_db == nullptr) {
+        QMessageBox::critical(nullptr, "Error", QString("Database item %1 with ID %2 is in the changelog, but no LDB is provided! Aborting.").arg(dbasset.folder).arg(dbasset.id));
+        return 2;
+    }
     if (dbasset.folder == "Map") {
         // populate the tilediff
         // for more info about this check the map_diff.cpp file
         std::unique_ptr<lcf::rpg::Map> s_map = lcf::LMU_Reader::Load((source + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4))).toStdString(), "UTF-8");
         std::unique_ptr<lcf::rpg::Map> p_map = lcf::LMU_Reader::Load((patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4))).toStdString(), "UTF-8");
+        if (p_map == nullptr) {
+            QMessageBox::warning(nullptr, "Warning", QString("Map%1 was not found in the patch copy, despite being mentioned in the changelog!").arg(paddedint(dbasset.id, 4)));
+            return 1;
+        }
         QSettings tilediff(main + "/eidolist_tilediff");
         QList<QSet<int>> p_changed = QList<QSet<int>>{QSet<int>(), QSet<int>()};
         // generate a list of changed tiles in the patch
@@ -83,7 +91,9 @@ void dbmerge(QString main, QString source, QString patch, DBAsset dbasset, Datab
         }
         tilediff.setValue(QString::number(dbasset.id), QVariant::fromValue(p_changed));
         // merge the map
-        h.m_tree->maps[dbasset.id] = h.p_tree->maps[dbasset.id];
+        if (h.p_tree != nullptr){
+            h.m_tree->maps[dbasset.id] = h.p_tree->maps[dbasset.id];
+        }
         merge(patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)), main + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)));
     } else if (dbasset.folder == "CE") {
         h.m_db->commonevents[dbasset.id - 1] = h.p_db->commonevents[dbasset.id - 1];
@@ -116,4 +126,5 @@ void dbmerge(QString main, QString source, QString patch, DBAsset dbasset, Datab
     } else if (dbasset.folder == "Troop") {
         h.m_db->troops[dbasset.id - 1] = h.p_db->troops[dbasset.id - 1];
     }
+    return 0;
 }
