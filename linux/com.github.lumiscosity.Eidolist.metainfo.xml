@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+        <name>Eidolist</name>
+        <summary>RPG Maker 2000/2003 patch merger</summary>
+        <id>com.github.lumiscosity.Eidolist</id>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>GPL-3.0-or-later</project_license>
+
+	<developer_name translatable="no">lumiscosity</developer_name>
+	<developer id="org.neocities.lumiscosity">
+		<name translatable="no">lumiscosity</name>
+	</developer>
+
+        <launchable type="desktop-id">com.github.lumiscosity.Eidolist.desktop</launchable>
+
+	<content_rating type="oars-1.1"/>
+
+	<supports>
+		<control>pointing</control>
+		<control>keyboard</control>
+	</supports>
+
+        <url type="homepage">https://github.com/lumiscosity/eidolist</url>
+        <url type="bugtracker">https://github.com/lumiscosity/eidolist/issues</url>
+        <url type="contribute">https://github.com/lumiscosity/eidolist</url>
+        <url type="vcs-browser">https://github.com/lumiscosity/eidolist</url>
+
+	<description>
+                <p>RPG Maker 2000/2003 patch merger</p>
+	</description>
+</component>

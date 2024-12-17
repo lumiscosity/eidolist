@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Eidolist
+GenericName=Patch merger
+Comment=RPG Maker 2000/2003 patch merger
+Exec=eidolist %U
+Icon=com.github.lumiscosity.Eidolist
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=Development;Utility;
+Keywords=patch;
