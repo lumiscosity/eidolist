@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "lcf/saveopt.h"
 #include <QDialog>
 
 namespace Ui {
@@ -34,6 +35,7 @@ public:
     QString source();
     QString patch();
     void toggleOkButton();
+    std::string encoding();
 private slots:
     void on_mainPushButton_clicked();
     void on_sourcePushButton_clicked();

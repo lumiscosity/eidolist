@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
         QString patch = w.patch();
         QString source = w.source();
 
-        DatabaseHolder h(main, source, patch);
+        DatabaseHolder h(main, source, patch, w.encoding());
 
         // if there is no changelog for the main copy yet, create one
         if (!QFile::exists(main + "/changelog.txt")) {
@@ -141,15 +141,15 @@ int main(int argc, char *argv[]) {
             lcf::LMT_Reader::Save(
                 (main + QString("/RPG_RT.lmt")).toStdString(),
                 *h.m_tree,
-                lcf::EngineVersion::e2k3,
-                "UTF-8",
+                lcf::GetEngineVersion(*h.m_db),
+                h.encoding,
                 lcf::SaveOpt::eNone);
         }
         if (h.m_db != nullptr) {
             lcf::LDB_Reader::Save(
                 (main + QString("/RPG_RT.ldb")).toStdString(),
                 *h.m_db,
-                "UTF-8",
+                h.encoding,
                 lcf::SaveOpt::eNone);
         }
 

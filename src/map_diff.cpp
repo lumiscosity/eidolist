@@ -61,9 +61,9 @@ int map_diff(DatabaseHolder &d, DBAsset asset, QString main, QString source, QSt
     // this actually uses an external file (and gross misuse of qsettings)
     // to track which tiles have been changed in the main copy so far
     // if none of the tiles overlap, we can automerge; else a manual diff is required
-    std::unique_ptr<lcf::rpg::Map> m_map = lcf::LMU_Reader::Load((main + QString("/Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(), "UTF-8");
-    std::unique_ptr<lcf::rpg::Map> s_map = lcf::LMU_Reader::Load((source + QString("/Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(), "UTF-8");
-    std::unique_ptr<lcf::rpg::Map> p_map = lcf::LMU_Reader::Load((patch + QString("/Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(), "UTF-8");
+    std::unique_ptr<lcf::rpg::Map> m_map = lcf::LMU_Reader::Load((main + QString("/Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(), d.encoding);
+    std::unique_ptr<lcf::rpg::Map> s_map = lcf::LMU_Reader::Load((source + QString("/Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(), d.encoding);
+    std::unique_ptr<lcf::rpg::Map> p_map = lcf::LMU_Reader::Load((patch + QString("/Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(), d.encoding);
     QSettings tilediff(main + "/eidolist_tilediff");
 
     if (m_map->height != s_map->height || s_map->height != p_map->height || m_map->width != s_map->width || s_map->width != p_map->width) {
@@ -147,7 +147,7 @@ int map_diff(DatabaseHolder &d, DBAsset asset, QString main, QString source, QSt
         (main + QString("Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(),
         *m_map,
         lcf::GetEngineVersion(*d.m_db),
-        "UTF-8",
+        d.encoding,
         lcf::SaveOpt::eNone
     );
 

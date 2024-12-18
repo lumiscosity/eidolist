@@ -70,8 +70,8 @@ int dbmerge(QString main, QString source, QString patch, DBAsset dbasset, Databa
     if (dbasset.folder == "Map") {
         // populate the tilediff
         // for more info about this check the map_diff.cpp file
-        std::unique_ptr<lcf::rpg::Map> s_map = lcf::LMU_Reader::Load((source + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4))).toStdString(), "UTF-8");
-        std::unique_ptr<lcf::rpg::Map> p_map = lcf::LMU_Reader::Load((patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4))).toStdString(), "UTF-8");
+        std::unique_ptr<lcf::rpg::Map> s_map = lcf::LMU_Reader::Load((source + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4))).toStdString(), h.encoding);
+        std::unique_ptr<lcf::rpg::Map> p_map = lcf::LMU_Reader::Load((patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4))).toStdString(), h.encoding);
         if (p_map == nullptr) {
             QMessageBox::warning(nullptr, "Warning", QString("Map%1 was not found in the patch copy, despite being mentioned in the changelog!").arg(paddedint(dbasset.id, 4)));
             return 1;
