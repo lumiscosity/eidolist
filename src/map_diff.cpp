@@ -129,17 +129,65 @@ int map_diff(DatabaseHolder &d, DBAsset asset, QString main, QString source, QSt
     // merge events
     // TODO: add a warning if events overlap
 
-    // get every changed event in the original map
-    QList<lcf::rpg::Event> p_events;
+    // get every new and changed event in the original map
     for (lcf::rpg::Event i : p_map->events) {
-        if (std::find(s_map->events.begin(), s_map->events.end(), i) != s_map->events.end()) {
-            p_events.append(i);
+        bool found = false;
+        for (lcf::rpg::Event j : s_map->events) {
+            if (i.ID == j.ID && i != j) {
+                // event at this id was changed
+                bool deleted = true;
+                for (int k = 0; k < m_map->events.size(); k++) {
+                    // replace the one in the new map, if it still exists
+                    if (m_map->events[k].ID == i.ID) {
+                        m_map->events[k] = i;
+                    }
+                    deleted = false;
+                    break;
+                }
+                if (deleted) {
+                    QMessageBox::warning(
+                        nullptr,
+                        "Warning",
+                        QString("Event %1 in Map[%2] was modified in the patch, but it has been removed in the main copy! Skipping.").arg(i.ID).arg(paddedint(asset.id, 4)));
+                }
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            // new event; add it to the map
+            i.ID = first_free_id(m_map);
+            m_map->events.push_back(i);
         }
     }
-    // place the changed events in the map
-    for (lcf::rpg::Event i : p_events) {
-        i.ID = first_free_id(m_map);
-        m_map->events.push_back(i);
+
+    // get every removed event
+    int removed_count = 0;
+    for (lcf::rpg::Event i : s_map->events) {
+        bool found = false;
+        for (lcf::rpg::Event j : p_map->events) {
+            if (i.ID == j.ID) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            // removed event; remove it from the map
+            for (int k = 0; k < m_map->events.size(); k++) {
+                // replace the one in the new map, if it still exists
+                if (m_map->events[k].ID == i.ID) {
+                    m_map->events.erase(m_map->events.begin() + k);
+                }
+                removed_count++;
+                break;
+            }
+        }
+    }
+    if (removed_count) {
+        QMessageBox::warning(
+            nullptr,
+            "Warning",
+            QString("%1 events have been removed from Map[%2]. Make sure everything still works fine!").arg(removed_count).arg(paddedint(asset.id, 4)));
     }
 
     // save the map
