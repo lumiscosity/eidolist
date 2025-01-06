@@ -66,6 +66,10 @@ int map_diff(DatabaseHolder &d, DBAsset asset, QString main, QString source, QSt
     std::unique_ptr<lcf::rpg::Map> p_map = lcf::LMU_Reader::Load((patch + QString("/Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(), d.encoding);
     QSettings tilediff(main + "/eidolist_tilediff");
 
+    if (!m_map || !s_map || !p_map) {
+        return 1;
+    }
+
     if (m_map->height != s_map->height || s_map->height != p_map->height || m_map->width != s_map->width || s_map->width != p_map->width) {
         QMessageBox::warning(
             nullptr,

@@ -8,4 +8,4 @@
 #include <QRegularExpression>
 #include <QDirIterator>
 
-int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const bool validate = false);
+int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const bool validate = true);

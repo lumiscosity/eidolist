@@ -22,13 +22,13 @@ int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const 
                     if (ex.match(i).hasMatch() && i.mid(2, 3) == "MAP" && i.contains("]")) {
                         // map (stored in db items for convenience)
                         DBAsset file(diffs[i.first(1)], "Map", i.split("[")[1].split("]")[0].toInt());
-                        if (validate && !QFile::exists(path + QString("/%1/Map%2.lmu").arg(file.folder).arg(paddedint(file.id, 4)))) {
+                        if (validate && !QFile::exists(path + QString("/Map%1.lmu").arg(paddedint(file.id, 4)))) {
                             if (QMessageBox::warning(
                                     nullptr,
                                     "Warning",
                                     QString("Map[%1] was mentioned in the changelog, but not included in the patch!").arg(paddedint(file.id, 4)),
                                     QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
-                                    )) {
+                                    ) == QMessageBox::StandardButton::Abort) {
                                 return 2;
                             }
                         }
@@ -42,7 +42,7 @@ int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const 
                                     "Warning",
                                     QString("%1/%2 was mentioned in the changelog, but not included in the patch!").arg(file.folder).arg(file.name),
                                     QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
-                                    )) {
+                                    ) == QMessageBox::StandardButton::Abort) {
                                 return 2;
                             }
                         }
@@ -54,43 +54,14 @@ int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const 
                 }
             }
         }
-        // ensure that all files in the patch have been included in the changelog
-        if (validate) {
-            QDirIterator iter(path, QDirIterator::Subdirectories);
-            while (iter.hasNext()) {
-                iter.next();
-                QString name = iter.fileName();
-                QString folder = iter.filePath().first(iter.filePath().length() - iter.fileName().length() - 1);
-                bool found = false;
-                for (Asset i : assets) {
-                    if (i.diff && folder == i.folder && name == i.name) {
-                        found = true;
-                    }
-                }
-                for (DBAsset i : dbassets) {
-                    if (i.diff && i.folder == "Map" && name.mid(3, 4).toInt() == i.id) {
-                        found = true;
-                    }
-                }
-                if (!found) {
-                    if (QMessageBox::warning(
-                            nullptr,
-                            "Warning",
-                            QString("%1/%2 was included in the patch, but not in the changelog!").arg(folder).arg(name),
-                            QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
-                            )) {
-                        return 2;
-                    }
-                }
-            }
-        }
+
         return 0;
     } else {
         QMessageBox::critical(
             nullptr,
             "Error",
             QString("The changelog in copy %1 could not be located! Make sure that it is placed in the copy folder as changelog.txt.").arg(path),
-            QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
+            QMessageBox::StandardButton::Abort
             );
         return 1;
     }

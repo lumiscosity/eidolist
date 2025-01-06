@@ -64,6 +64,50 @@ int main(int argc, char *argv[]) {
         if (readlog(patch, patch_assets, patch_dbassets)) {
             return 1;
         }
+        // ensure that all files in the patch have been included in the changelog
+        QDirIterator iter(patch, QDirIterator::Subdirectories);
+        while (iter.hasNext()) {
+            QString i = iter.next();
+            if (i.endsWith(".") || i.endsWith(".lmt") || i.endsWith(".ldb") || i.endsWith(".txt") || i.endsWith(".exe") || i.endsWith(".ini") || !i.contains(".")) {
+                continue;
+            }
+            QString name = iter.fileName();
+            QString folder = iter.filePath().first(iter.filePath().length() - iter.fileName().length() - 1);
+            bool found = false;
+            for (Asset i : patch_assets) {
+                if (i.diff && folder == i.folder && name == i.name) {
+                    found = true;
+                }
+            }
+            for (DBAsset i : patch_dbassets) {
+                if (i.diff && i.folder == "Map" && name.mid(3, 4).toInt() == i.id) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                if (QMessageBox::warning(
+                        nullptr,
+                        "Warning",
+                        QString("%1/%2 was included in the patch, but not in the changelog!").arg(folder.split("/").last()).arg(name),
+                        QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Ignore
+                        ) == QMessageBox::StandardButton::Abort) {
+                    return 2;
+                }
+                for (int i = 0; i <= patch_assets.size(); i++) {
+                    if (patch_assets[i].diff && folder == patch_assets[i].folder && name == patch_assets[i].name) {
+                        patch_assets.remove(i);
+                        break;
+                    }
+                }
+                // TODO: this does nothing. try adding a map to a changelog and not including it in the patch. if you don't abort it breaks.
+                for (int i = 0; i <= patch_dbassets.size(); i++) {
+                    if (patch_dbassets[i].diff && patch_dbassets[i].folder == "Map" && name.mid(3, 4).toInt() == patch_dbassets[i].id) {
+                        patch_dbassets.remove(i);
+                        break;
+                    }
+                }
+            }
+        }
         // run merges for files
         // assets which are being added, removed or modified for the first time this build cycle (not in main_assets) get automerged
         // otherwise, a conflict is raised

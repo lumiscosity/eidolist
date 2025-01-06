@@ -19,6 +19,16 @@
 
 #include <lcf/rpg/map.h>
 
+template <class T> void db_insert(const std::vector<T> &source, std::vector<T> &dest, size_t id) {
+    // if there is not enough space in the work copy database, extend it
+    for (size_t i = source.size(); i <= dest.size(); i++) {
+        T empty;
+        empty.ID = i + 1;
+        dest.push_back(empty);
+    }
+    dest[id] = source[id];
+};
+
 void remove(QString source) {
     if (QFile::exists(source)) {
         QFile::remove(source);
@@ -96,35 +106,35 @@ int dbmerge(QString main, QString source, QString patch, DBAsset dbasset, Databa
         }
         merge(patch + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)), main + QString("/Map%1.lmu").arg(paddedint(dbasset.id, 4)));
     } else if (dbasset.folder == "CE") {
-        h.m_db->commonevents[dbasset.id - 1] = h.p_db->commonevents[dbasset.id - 1];
+        db_insert(h.p_db->commonevents, h.m_db->commonevents, dbasset.id - 1);
     } else if (dbasset.folder == "Switch" || dbasset.folder == "S") {
-        h.m_db->switches[dbasset.id - 1] = h.p_db->switches[dbasset.id - 1];
+        db_insert(h.p_db->switches, h.m_db->switches, dbasset.id - 1);
     } else if (dbasset.folder == "Variable" || dbasset.folder == "V") {
-        h.m_db->variables[dbasset.id - 1] = h.p_db->variables[dbasset.id - 1];
+        db_insert(h.p_db->variables, h.m_db->variables, dbasset.id - 1);
     } else if (dbasset.folder == "Actor") {
-        h.m_db->actors[dbasset.id - 1] = h.p_db->actors[dbasset.id - 1];
+        db_insert(h.p_db->actors, h.m_db->actors, dbasset.id - 1);
     } else if (dbasset.folder == "Animation") {
-        h.m_db->animations[dbasset.id - 1] = h.p_db->animations[dbasset.id - 1];
+        db_insert(h.p_db->animations, h.m_db->animations, dbasset.id - 1);
     } else if (dbasset.folder == "BattlerAnim") {
-        h.m_db->battleranimations[dbasset.id - 1] = h.p_db->battleranimations[dbasset.id - 1];
+        db_insert(h.p_db->battleranimations, h.m_db->battleranimations, dbasset.id - 1);
     } else if (dbasset.folder == "Class") {
-        h.m_db->classes[dbasset.id - 1] = h.p_db->classes[dbasset.id - 1];
+        db_insert(h.p_db->classes, h.m_db->classes, dbasset.id - 1);
     } else if (dbasset.folder == "Element") {
-        h.m_db->attributes[dbasset.id - 1] = h.p_db->attributes[dbasset.id - 1];
+        db_insert(h.p_db->attributes, h.m_db->attributes, dbasset.id - 1);
     } else if (dbasset.folder == "Enemy") {
-        h.m_db->enemies[dbasset.id - 1] = h.p_db->enemies[dbasset.id - 1];
+        db_insert(h.p_db->enemies, h.m_db->enemies, dbasset.id - 1);
     } else if (dbasset.folder == "Item") {
-        h.m_db->items[dbasset.id - 1] = h.p_db->items[dbasset.id - 1];
+        db_insert(h.p_db->items, h.m_db->items, dbasset.id - 1);
     } else if (dbasset.folder == "Skill") {
-        h.m_db->skills[dbasset.id - 1] = h.p_db->skills[dbasset.id - 1];
+        db_insert(h.p_db->skills, h.m_db->skills, dbasset.id - 1);
     } else if (dbasset.folder == "State") {
-        h.m_db->states[dbasset.id - 1] = h.p_db->states[dbasset.id - 1];
+        db_insert(h.p_db->states, h.m_db->states, dbasset.id - 1);
     } else if (dbasset.folder == "Terrain") {
-        h.m_db->terrains[dbasset.id - 1] = h.p_db->terrains[dbasset.id - 1];
+        db_insert(h.p_db->terrains, h.m_db->terrains, dbasset.id - 1);
     } else if (dbasset.folder == "Tileset") {
-        h.m_db->chipsets[dbasset.id - 1] = h.p_db->chipsets[dbasset.id - 1];
+        db_insert(h.p_db->chipsets, h.m_db->chipsets, dbasset.id - 1);
     } else if (dbasset.folder == "Troop") {
-        h.m_db->troops[dbasset.id - 1] = h.p_db->troops[dbasset.id - 1];
+        db_insert(h.p_db->troops, h.m_db->troops, dbasset.id - 1);
     }
     return 0;
 }
