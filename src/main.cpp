@@ -73,14 +73,15 @@ int main(int argc, char *argv[]) {
             }
             QString name = iter.fileName();
             QString folder = iter.filePath().first(iter.filePath().length() - iter.fileName().length() - 1);
+            QString folder_short = folder.split("/").last();
             bool found = false;
-            for (Asset i : patch_assets) {
-                if (i.diff && folder == i.folder && name == i.name) {
+            for (Asset j : patch_assets) {
+                if (j.diff && folder_short == j.folder && name == j.name) {
                     found = true;
                 }
             }
-            for (DBAsset i : patch_dbassets) {
-                if (i.diff && i.folder == "Map" && name.mid(3, 4).toInt() == i.id) {
+            for (DBAsset k : patch_dbassets) {
+                if (k.diff && k.folder == "Map" && name.mid(3, 4).toInt() == k.id) {
                     found = true;
                 }
             }
@@ -93,14 +94,14 @@ int main(int argc, char *argv[]) {
                         ) == QMessageBox::StandardButton::Abort) {
                     return 2;
                 }
-                for (int i = 0; i <= patch_assets.size(); i++) {
+                for (int i = 0; i < patch_assets.size(); i++) {
                     if (patch_assets[i].diff && folder == patch_assets[i].folder && name == patch_assets[i].name) {
                         patch_assets.remove(i);
                         break;
                     }
                 }
                 // TODO: this does nothing. try adding a map to a changelog and not including it in the patch. if you don't abort it breaks.
-                for (int i = 0; i <= patch_dbassets.size(); i++) {
+                for (int i = 0; i < patch_dbassets.size(); i++) {
                     if (patch_dbassets[i].diff && patch_dbassets[i].folder == "Map" && name.mid(3, 4).toInt() == patch_dbassets[i].id) {
                         patch_dbassets.remove(i);
                         break;

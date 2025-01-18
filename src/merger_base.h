@@ -21,10 +21,14 @@
 
 template <class T> void db_insert(const std::vector<T> &source, std::vector<T> &dest, size_t id) {
     // if there is not enough space in the work copy database, extend it
-    for (size_t i = source.size(); i <= dest.size(); i++) {
-        T empty;
-        empty.ID = i + 1;
-        dest.push_back(empty);
+    if (source.size() > dest.size()) {
+        size_t i = source.size();
+        while (source.size() <= dest.size()) {
+            T empty;
+            empty.ID = i + 1;
+            dest.push_back(empty);
+            i++;
+        }
     }
     dest[id] = source[id];
 };

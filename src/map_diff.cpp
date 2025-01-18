@@ -196,7 +196,7 @@ int map_diff(DatabaseHolder &d, DBAsset asset, QString main, QString source, QSt
 
     // save the map
     lcf::LMU_Reader::Save(
-        (main + QString("Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(),
+        (main + QString("/Map%1.lmu").arg(paddedint(asset.id, 4))).toStdString(),
         *m_map,
         lcf::GetEngineVersion(*d.m_db),
         d.encoding,
