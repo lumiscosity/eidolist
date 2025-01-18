@@ -19,11 +19,11 @@
 
 #include <lcf/rpg/map.h>
 
-template <class T> void db_insert(const std::vector<T> &source, std::vector<T> &dest, size_t id) {
+template <class T> void db_insert(std::vector<T> &source, std::vector<T> &dest, size_t id) {
     // if there is not enough space in the work copy database, extend it
     if (source.size() > dest.size()) {
-        size_t i = source.size();
-        while (source.size() <= dest.size()) {
+        unsigned int i = dest.size();
+        while (i < source.size()) {
             T empty;
             empty.ID = i + 1;
             dest.push_back(empty);
