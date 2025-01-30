@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
             f.open(QFile::OpenModeFlag::WriteOnly);
             f.write("");
             f.close();
-        } else if (readlog(main, main_assets, main_dbassets)) {
+        } else if (readlog(main, main_assets, main_dbassets, false)) {
             return 1;
         }
         if (readlog(patch, patch_assets, patch_dbassets)) {

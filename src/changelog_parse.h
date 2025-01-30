@@ -9,3 +9,5 @@
 #include <QDirIterator>
 
 int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const bool validate = true);
+
+bool any_exists(QString path);

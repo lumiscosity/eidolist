@@ -36,7 +36,7 @@ int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const 
                     } else if (!ex.match(i).hasMatch() && i.split(" ").size() >= 2) {
                         // file
                         Asset file(diffs[i.first(1)], i.split(" ")[1], fileex.match(i).captured(1));
-                        if (validate && !QFile::exists(path + QString("/%1/%2").arg(file.folder).arg(file.name))) {
+                        if (validate && !any_exists(path + QString("/%1/%2").arg(file.folder).arg(file.name))) {
                             if (QMessageBox::warning(
                                     nullptr,
                                     "Warning",
@@ -65,4 +65,15 @@ int readlog(QString path, QList<Asset> &assets, QList<DBAsset> &dbassets, const 
             );
         return 1;
     }
+}
+
+bool any_exists(QString path) {
+    return
+        QFile::exists(path)
+        || QFile::exists(path + ".png")
+        || QFile::exists(path + ".bmp")
+        || QFile::exists(path + ".xyz")
+        || QFile::exists(path + ".mp3")
+        || QFile::exists(path + ".wav")
+        || QFile::exists(path + ".ogg");
 }
